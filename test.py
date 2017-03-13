@@ -70,14 +70,57 @@ def generate_random_key():
     key = [random.randint(0,255) for i in range(16)]
     return key
 
-def init():
+def read_aes():
     with open("aes.txt") as f:
         sbox = [[int(x,16) for x in z[:-2].split(' ')] for z in f.readlines()]
+    return sbox
 
+def init(sbox):
     key = generate_random_key()
     # sboxm, _ = algo1(list(np.array(sbox).flatten()), key)
     # sboxm, _ = algo2(sbox, key)
     sboxm, _ = algo3(sbox, key)
-    print sboxm
+    return sboxm
+
+def random_sbox():
+    x = range(256)
+    random.shuffle(x)
+    return np.array(x)
+
+def do_once():
+    inp = read_aes();
+    print init(inp)
+
+Differentials_table=[[0 for x in range(pow(2,8))]for y in range(pow(2,8))];
+
+def difference_generator(SBox,difference,ip):
+    for i in range(pow(2,ip)):
+        x1=i;
+        x2=i^difference;
+        y1=SBox[x1];
+        y2=SBox[x2];
+        l=y1^y2;
+        Differentials_table[difference][l]+=1;
 
 
+def generate_dat(inp):
+    # Differentials_table=[[0 for x in range(pow(2,4))]for y in range(pow(2,4))];
+    SBox=init(inp);
+    print SBox;
+    for i in range(256):
+        difference_generator(SBox,i,8);
+    return Differentials_table;
+
+final_DDT_table=[[0 for x in range(pow(2,8))]for y in range(pow(2,8))];
+
+def mean_dat():
+    for k in range(1000):
+        inp = read_aes()
+        table=generate_dat(inp);
+        for i in range(256):
+            for j in range(256):
+                final_DDT_table[i][j]=final_DDT_table[i][j]+table[i][j];
+    for i in range(256):
+        for j in range(256):
+            final_DDT_table[i][j]/=1000.0
+    print final_DDT_table;
