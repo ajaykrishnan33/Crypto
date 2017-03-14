@@ -124,7 +124,6 @@ def do_ntimes(n):
 	aes_sbox = np.array(np.matrix(inp).reshape((256,)))[0]
 	aes_lat = lat_optimized(aes_sbox)
 	aes_probs = aes_lat/256.0
-
 	make_results(aes_probs, avg_probs)
 
 def balancedness(sbox):

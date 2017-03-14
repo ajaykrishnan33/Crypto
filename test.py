@@ -102,25 +102,39 @@ def difference_generator(SBox,difference,ip):
         l=y1^y2;
         Differentials_table[difference][l]+=1;
 
+def print_error(table1,table2):
+    avg_sboxm=0;
+    avg_aes=0;
+    for i in range(256):
+        for j in range(256):
+            avg_sboxm=avg_sboxm+table1[i][j]*table1[i][j]
+            avg_aes=avg_aes+table2[i][j]*table2[i][j]
+    print "Sboxm error:"+str(avg_sboxm)
+    print "AES error:"+str(avg_aes)
 
 def generate_dat(inp):
     # Differentials_table=[[0 for x in range(pow(2,4))]for y in range(pow(2,4))];
     SBox=init(inp);
-    print SBox;
+   # print SBox;
     for i in range(256):
         difference_generator(SBox,i,8);
     return Differentials_table;
 
 final_DDT_table=[[0 for x in range(pow(2,8))]for y in range(pow(2,8))];
 
-def mean_dat():
-    for k in range(1000):
-        inp = read_aes()
-        table=generate_dat(inp);
+def mean_dat(n):
+    inp = read_aes()
+    for k in range(n):
+        sboxm=init(inp)
+        table=generate_dat(sboxm);
         for i in range(256):
             for j in range(256):
                 final_DDT_table[i][j]=final_DDT_table[i][j]+table[i][j];
+    table2=generate_dat(inp);
     for i in range(256):
         for j in range(256):
-            final_DDT_table[i][j]/=1000.0
-    print final_DDT_table;
+            final_DDT_table[i][j]/=float(n*256)
+            table2[i][j]/=float(256);
+    
+    # print table2;
+    print_error(final_DDT_table,table2)
