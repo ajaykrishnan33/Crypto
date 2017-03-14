@@ -126,5 +126,45 @@ def do_ntimes(n):
 	aes_probs = aes_lat/256.0
 	make_results(aes_probs, avg_probs)
 
-def balancedness(sbox):
-	pass
+def generate_random_sbox():
+	sbox = range(256)
+	random.shuffle(sbox)
+	return np.array(sbox)
+
+def average_nonlinearity(n):
+	inp = read_aes()
+	nl = 0
+	for i in range(n):
+		sbox = init(inp)
+		nl += non_linearity(sbox)
+	nl = nl/(n*1.0)
+	return  nl
+
+def average_nonlinearity_random(n):
+	inp = read_aes()
+	nl = 0
+	for i in range(n):
+		sbox = generate_random_sbox()
+		nl += non_linearity(sbox)
+	nl = nl/(n*1.0)
+	return  nl
+
+
+def do_ntimes_random(n):
+	inp = read_aes()
+	avg_lat = None
+	for i in range(n):
+		sbox = generate_random_sbox()
+		lat = lat_optimized(sbox)
+		if avg_lat is None:
+			avg_lat = lat
+		else:
+			avg_lat += lat
+	avg_lat = avg_lat/(n*1.0)
+	avg_probs = avg_lat/256.0
+
+	aes_sbox = np.array(np.matrix(inp).reshape((256,)))[0]
+	aes_lat = lat_optimized(aes_sbox)
+	aes_probs = aes_lat/256.0
+	make_results(aes_probs, avg_probs)
+
