@@ -150,4 +150,4 @@ int main()
 
     decrypt(input);
 	return 0;
-}rm
+}
