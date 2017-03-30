@@ -1,129 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Crypto.h"
 
 byte** sboxm;
 byte* encryptionKey;
-byte round_keys[11][KEY_BYTES];
-
-void SubWord(byte word[4]) {
-	word[0] = sboxm[(byte)word[0] >> 4][(byte)(word[0] << 4) >> 4];
-	word[1] = sboxm[(byte)word[1] >> 4][(byte)(word[1] << 4) >> 4];
-	word[2] = sboxm[(byte)word[2] >> 4][(byte)(word[2] << 4) >> 4];
-	word[3] = sboxm[(byte)word[3] >> 4][(byte)(word[3] << 4) >> 4];
-}
-
-void RotWord(byte word[4]) {
-	int temp = word[0];
-	word[0] = word[1];
-	word[1] = word[2];
-	word[2] = word[3];
-	word[3] = temp;
-}
-
-void ExpandKey() {
-
-	byte RCon[10][4] = {
-		{0x01, 0x00, 0x00, 0x00},
-		{0x02, 0x00, 0x00, 0x00},
-		{0x04, 0x00, 0x00, 0x00},
-		{0x08, 0x00, 0x00, 0x00},
-		{0x10, 0x00, 0x00, 0x00},
-		{0x20, 0x00, 0x00, 0x00},
-		{0x40, 0x00, 0x00, 0x00},
-		{0x80, 0x00, 0x00, 0x00},
-		{0x1B, 0x00, 0x00, 0x00},
-		{0x36, 0x00, 0x00, 0x00}
-	};
-
-	byte w[44][4];
-	int i, j, k;
-
-	for (i = 0; i < 4; i++) {
-		w[i][0] = encryptionKey[4 * i];
-		w[i][1] = encryptionKey[4 * i + 1];
-		w[i][2] = encryptionKey[4 * i + 2];
-		w[i][3] = encryptionKey[4 * i + 3];
-	}
-
-	byte temp[4];
-
-	for (i = 4; i < 44; i++) {
-		temp[0] = w[i - 1][0];
-		temp[1] = w[i - 1][1];
-		temp[2] = w[i - 1][2];
-		temp[3] = w[i - 1][3];
-
-		if (i % 4 == 0) {
-			RotWord(temp);
-			SubWord(temp);
-			for (j = 0; j < 4; j++) {
-				temp[j] = temp[j] ^ RCon[i / 4][j];
-			}
-		}
-
-		for (j = 0; j < 4; j++) {
-			w[i][j] = w[i - 4][j] ^ temp[j];
-		}
-	}
-
-	j = 0;
-	for (i = 0; i < 11; i++) {
-		j = 0;
-		for (k = 0; k < 4; k++) {
-			round_keys[i][j++] = w[4 * i][k];
-		}
-		for (k = 0; k < 4; k++) {
-			round_keys[i][j++] = w[4 * i + 1][k];
-		}
-		for (k = 0; k < 4; k++) {
-			round_keys[i][j++] = w[4 * i + 2][k];
-		}
-		for (k = 0; k < 4; k++) {
-			round_keys[i][j++] = w[4 * i + 3][k];
-		}
-	}
-
-}
-
-void AddKey(byte state[4][4], int round) {
-
-	byte flat[16];
-
-	int i, j, k = 0;
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 4; j++) {
-			flat[k++] = state[j][i];
-		}
-	}
-
-	for (i = 0; i < 16; i++) {
-		flat[i] = flat[i] ^ round_keys[round][i];
-	}
-
-	k = 0;
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 4; j++) {
-			state[j][i] = flat[k++];
-		}
-	}
-
-}
+byte** round_keys;
 
 void SubBytes(byte state[4][4]) {
 
 	int i, j;
 
-	SubWord(state[0]);
-	SubWord(state[1]);
-	SubWord(state[2]);
-	SubWord(state[3]);
-
-	// for(i=0;i<4;i++){
-	// 	for(j=0;j<4;j++){
-	// 		state[i][j] = sboxm[(byte)state[i][j] >> 4][(byte)(state[i][j] << 4) >> 4];
-	// 	}
-	// }
+	SubWord(sboxm, state[0]);
+	SubWord(sboxm, state[1]);
+	SubWord(sboxm, state[2]);
+	SubWord(sboxm, state[3]);
 
 }
 
@@ -188,7 +79,7 @@ void Round(byte state[4][4], int round) {
 	SubBytes(state);
 	ShiftRows(state);
 	MixColumns(state);
-	AddKey(state, round);
+	AddKey(state, round_keys[round]);
 
 }
 
@@ -224,12 +115,35 @@ void Encrypt(byte input[16]) {
 	printf("\n");
 }
 
+// void EncryptCBC(char* input){
+
+// 	int len = strlen(input);
+
+// 	int padded_len = len % 16 ? len + 16 : ( len / 16 ) * 16 + 16;
+
+// 	byte* padded_input = calloc(padded_len, sizeof(byte));
+
+// 	int i;
+// 	for(i=0;i<len;i++){
+// 		padded_input[i] = (byte)input[i];
+// 	}
+
+// 	int d = padded_len - len - 16;
+
+// 	padded_input[padded_len-1] = 
+
+// 	for(i=padded_len-16;i<padded_len;i++){
+
+// 	}
+
+// }
+
 void main() {
 	sboxm = GenerateSBox();
 	// byte** invsboxm = GetInvSBox(sboxm);
 	encryptionKey = GetKey();
 
-	ExpandKey();
+	round_keys = ExpandKey(sboxm, encryptionKey);
 
 	int i, j;
 	// for(i=0;i<16;i++){
@@ -244,15 +158,15 @@ void main() {
 	// }
 	// printf("\n");
 
-	// for(i=0;i<11;i++){
-	// 	for(j=0;j<KEY_BYTES;j++){
-	// 		printf("%x ", round_keys[i][j]);
-	// 	}
-	// 	printf("\n");
-	// }
+	for(i=0;i<11;i++){
+		for(j=0;j<KEY_BYTES;j++){
+			printf("%x ", round_keys[i][j]);
+		}
+		printf("\n");
+	}
 
-	byte input[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	// byte input[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-	Encrypt(input);
+	// Encrypt(input);
 
 }
