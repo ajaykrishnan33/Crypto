@@ -3,13 +3,36 @@
 #include "Crypto.h"
 
 byte** sboxm;
-byte key[KEY_BYTES];
+byte* encryptionKey;
+byte round_keys[10][KEY_BYTES];
 
 void ExpandKey(){
-	
+
+
+
 }
 
-void AddKey(byte state[4][4]){
+void AddKey(byte state[4][4], int round){
+
+	byte flat[16];
+
+	int i,j,k=0;
+	for(i=0;i<4;i++){
+		for(j=0;j<4;j++){
+			flat[k++] = state[j][i];
+		}
+	}
+
+	for(i=0;i<16;i++){
+		flat[i] = flat[i]^round_keys[round][i];
+	}
+	
+	k = 0;
+	for(i=0;i<4;i++){
+		for(j=0;j<4;j++){
+			state[j][i] = flat[k++];
+		}
+	}
 
 }
 
@@ -19,7 +42,7 @@ void SubBytes(byte state[4][4]){
 
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			state[i][j] = sboxm[(byte)state[i][j] >> 4][(byte)(key[i] << 4) >> 4];
+			state[i][j] = sboxm[(byte)state[i][j] >> 4][(byte)(encryptionKey[i] << 4) >> 4];
 		}
 	}
 
@@ -97,11 +120,12 @@ void Encrypt(byte input[16]){
 
 void main(){
 	sboxm = GenerateSBox();
-	key = GetKey();
+	byte** invsboxm = GetInvSBox(sboxm);
+	encryptionKey = GetKey();
 	int i, j;
 	for(i=0;i<16;i++){
 		for(j=0;j<16;j++){
-			printf("%x ",sboxm[i][j]);
+			printf("%x ", invsboxm[i][j]);
 		}
 		printf("\n");
 	}

@@ -131,6 +131,34 @@ byte** GenerateSBox() {
 	return sboxm;
 }
 
-byte[] GetKey(){
+byte** GetInvSBox(byte** sboxm){
+	byte** invsboxm = malloc(sizeof(byte*)*16);
+	byte flat_sbox[256];
+	byte flat_invsbox[256];
+
+	int i, j, k = 0;
+
+	for(i=0;i<16;i++){
+		for(j=0;j<16;j++){
+			flat_sbox[k++] = sboxm[i][j];
+		}
+	}
+
+	for(i=0;i<256;i++){
+		flat_invsbox[flat_sbox[i]] = i;
+	}
+
+	k = 0;
+	for(i=0;i<16;i++){
+		invsboxm[i] = malloc(sizeof(byte)*16);
+		for(j=0;j<16;j++){
+			invsboxm[i][j] = flat_invsbox[k++];
+		}
+	}
+
+	return invsboxm;
+}
+
+byte* GetKey(){
 	return key;
 }

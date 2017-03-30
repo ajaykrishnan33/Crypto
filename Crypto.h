@@ -3,4 +3,5 @@
 typedef unsigned char byte;
 
 byte** GenerateSBox();
-byte[] GetKey();
+byte** GetInvSBox(byte**);
+byte* GetKey();
