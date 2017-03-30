@@ -1,0 +1,1 @@
+time ./encrypt pre/$1 > post/$1
