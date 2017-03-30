@@ -83,7 +83,7 @@ void Round(byte state[4][4], int round) {
 
 }
 
-void Encrypt(byte input[16]) {
+byte* Encrypt(byte input[16]) {
 	byte state[4][4];
 
 	sboxm = GenerateSBox();
@@ -101,7 +101,7 @@ void Encrypt(byte input[16]) {
 		Round(state, i);
 	}
 
-	byte output[16];
+	byte* output = malloc(sizeof(byte)*16);
 	k = 0;
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 4; j++) {
@@ -109,34 +109,47 @@ void Encrypt(byte input[16]) {
 		}
 	}
 
-	for (i = 0; i < 16; i++) {
-		printf("%x ", output[i]);
-	}
-	printf("\n");
+	return output;
 }
 
-// void EncryptCBC(char* input){
+byte* EncryptCBC(char* input){
 
-// 	int len = strlen(input);
+	int len = strlen(input);
 
-// 	int padded_len = len % 16 ? len + 16 : ( len / 16 ) * 16 + 16;
+	int padded_len = len % 16 ? len + 16 : ( len / 16 ) * 16 + 16;
 
-// 	byte* padded_input = calloc(padded_len, sizeof(byte));
+	byte* padded_input = calloc(padded_len, sizeof(byte));
+	byte* output = calloc(padded_len, sizeof(byte));
 
-// 	int i;
-// 	for(i=0;i<len;i++){
-// 		padded_input[i] = (byte)input[i];
-// 	}
+	int i, j, k;
+	for(i=0;i<len;i++){
+		padded_input[i] = (byte)input[i];
+	}
 
-// 	int d = padded_len - len - 16;
+	int d = padded_len - len - 16;
 
-// 	padded_input[padded_len-1] = 
+	padded_input[padded_len-1] = (byte)d;
 
-// 	for(i=padded_len-16;i<padded_len;i++){
+	int max_iter = padded_len/16;
 
-// 	}
+	byte IV[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-// }
+	byte* temp = IV;
+	byte inter[16];
+	k = 0;
+	for(i=0;i<max_iter;i++){
+		for(j=0;j<16;j++){
+			inter[j] = padded_input[16*i+j]^temp[j];
+		}
+		temp = Encrypt(inter);
+		for(j=0;j<16;j++){
+			output[k++] = temp[j];
+		}
+	}
+
+	return output;
+
+}
 
 void main() {
 	sboxm = GenerateSBox();
@@ -167,6 +180,11 @@ void main() {
 
 	byte input[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-	Encrypt(input);
+	byte* output = Encrypt(input);
+
+	for (i = 0; i < 16; i++) {
+		printf("0x%x, ", output[i]);
+	}
+	printf("\n");
 
 }
