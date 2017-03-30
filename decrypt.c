@@ -33,7 +33,7 @@ void inverseMixColumns(byte cipherState[4][4])
 
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			newstate[i][j] = A[i][0]*cipherState[0][j] + A[i][1]*cipherState[1][j] + A[i][2]*cipherState[2][j] + A[i][3]*cipherState[3][j];
+			newstate[i][j] = A[0][j]*cipherState[i][0] + A[1][j]*cipherState[i][1] + A[2][j]*cipherState[i][2] + A[3][j]*cipherState[i][3];
 		}
 	}
 
