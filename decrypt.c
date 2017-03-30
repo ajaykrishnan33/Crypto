@@ -3,7 +3,7 @@
 #include "Crypto.h"
 
 byte* decryptionKey;
-byte round_keys[10][KEY_BYTES];
+byte round_keys[11][KEY_BYTES];
 byte** invsboxm;
 void inverseSubBytes(byte cipherState[4][4])
 {
@@ -107,7 +107,7 @@ void Round(byte cipherState[4][4], int round) {
     inverseSubBytes(cipherState);
 }
 
-void decrypt(byte cipher[16])
+byte *decrypt(byte cipher[16])
 {
    byte cipherState[4][4];
    int i,j,l=0;
@@ -124,7 +124,7 @@ void decrypt(byte cipher[16])
 	}
 
 	AddKey(state,0);
-    byte planetext[16];
+    static byte planetext[16];
 
 	l = 0;
 	for (i = 0; i < 4; i++)
@@ -138,9 +138,32 @@ void decrypt(byte cipher[16])
 		printf("%x ", planetext[i]);
 	}
 	printf("\n");
- 
+    return planetext;
 }
 
+byte *one_round_cbc(byte cipher[16],byte roundIV[16])
+{   static byte* out;
+	out=decrypt(cipher);
+    int i=0;
+    for(i=0;i<16;i++)
+    {
+    	out[i]=out[i]^IV[i];
+    	i++;
+    }
+    return out;
+}
+
+void cbc_decrypt(byte ciphertext[100][16],byte IV[16])
+{
+  byte* p;
+  int i=1;
+  p=one_round_cbc(cipher[0],IV)
+  while(i<100)
+  {
+  	p=one_round_cbc(cipher[i],p);
+  	i++;
+  }
+}
 int main()
 {   sboxm = GenerateSBox();
     invsboxm = GetInvSBox(sboxm);
