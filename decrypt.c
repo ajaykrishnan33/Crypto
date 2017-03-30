@@ -17,14 +17,14 @@ void inverseSubBytes(byte cipherState[4][4])
 }
 
 
-void AddKey(byte state[4][4], int round){
+void AddKey(byte cipherState[4][4], int round){
 
 	byte flat[16];
 
 	int i,j,k=0;
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			flat[k++] = state[j][i];
+			flat[k++] = cipherState[j][i];
 		}
 	}
 
@@ -35,7 +35,7 @@ void AddKey(byte state[4][4], int round){
 	k = 0;
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			state[j][i] = flat[k++];
+			cipherState[j][i] = flat[k++];
 		}
 	}
 
@@ -101,7 +101,7 @@ void inverseShiftRows(byte cipherState[4][4])
 
 void Round(byte cipherState[4][4], int round) {
 
-	AddKey(state, round);
+	AddKey(cipherState, round);
     inverseMixColumns(cipherState);
     inverseShiftRows(cipherState);
     inverseSubBytes(cipherState);
@@ -118,12 +118,12 @@ byte *decrypt(byte cipher[16])
 		}
 	}
 
-	for (i = 1; i <= 10; i++) 
+	for (i = 10; i > 0; i--) 
 	{
-		Round(state, i);
+		Round(cipherState, i);
 	}
 
-	AddKey(state,0);
+	AddKey(cipherState,0);
     static byte planetext[16];
 
 	l = 0;
@@ -168,5 +168,8 @@ int main()
 {   sboxm = GenerateSBox();
     invsboxm = GetInvSBox(sboxm);
     
+    byte input[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    decrypt(input);
 	return 0;
 }
