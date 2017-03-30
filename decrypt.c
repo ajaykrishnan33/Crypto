@@ -33,7 +33,7 @@ void inverseMixColumns(byte cipherState[4][4])
 
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			newstate[i][j] = A[0][j]*cipherState[i][0] + A[1][j]*cipherState[i][1] + A[2][j]*cipherState[i][2] + A[3][j]*cipherState[i][3];
+			newstate[i][j] = (A[0][j]*cipherState[i][0] + A[1][j]*cipherState[i][1] + A[2][j]*cipherState[i][2] + A[3][j]*cipherState[i][3])%256;
 		}
 	}
 
@@ -77,7 +77,7 @@ void inverseShiftRows(byte cipherState[4][4])
 void Round(byte cipherState[4][4], int round) {
 
 	AddKey(cipherState, round_keys[round]);
-    inverseMixColumns(cipherState);
+    //inverseMixColumns(cipherState);
     inverseShiftRows(cipherState);
     inverseSubBytes(cipherState);
 }
@@ -116,29 +116,36 @@ byte *decrypt(byte cipher[16])
     return planetext;
 }
 
-// byte *one_round_cbc(byte cipher[16],byte roundIV[16])
-// {   static byte* out;
-// 	out=decrypt(cipher);
-//     int i=0;
-//     for(i=0;i<16;i++)
-//     {
-//     	out[i]=out[i]^roundIV[i];
-//     	i++;
-//     }
-//     return out;
-// }
 
-// void cbc_decrypt(byte ciphertext[100][16],byte IV[16])
-// {
-//   byte* p;
-//   int i=1;
-//   p=one_round_cbc(ciphertext[0],IV);
-//   while(i<100)
-//   {
-//   	p=one_round_cbc(ciphertext[i],p);
-//   	i++;
-//   }
-// }
+byte *cbc_decrypt(char* cipher)
+{   int len = strlen(cipher);
+	byte* output = calloc(len, sizeof(byte));
+	byte IV[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+	byte* temp = IV;
+	byte inter[16];
+    byte inter2;
+	int k=0;
+	int i,j;
+	int iter=len/16;
+	for(i=0;i<iter;i++)
+	{
+       for(j=0;j<16;j++){
+			inter[j] = cipher[16*i+j];
+		}
+		byte* out=decrypt(inter);
+		for(j=0;j<16;j++)
+		{
+           //inter2=inter[j];
+           out[j]=out[j]^temp[j];
+           temp[j]=inter[j];
+		}
+		for(j=0;j<16;j++){
+			output[k++] = out[j];
+		}
+	}
+  return output;
+}
 int main()
 {   sboxm = GenerateSBox();
     invsboxm = GetInvSBox(sboxm);
