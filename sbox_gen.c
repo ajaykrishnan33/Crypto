@@ -130,3 +130,7 @@ byte** GenerateSBox() {
 	byte** sboxm = Algorithm3(AES_sbox, key);
 	return sboxm;
 }
+
+byte[] GetKey(){
+	return key;
+}

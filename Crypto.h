@@ -3,3 +3,4 @@
 typedef unsigned char byte;
 
 byte** GenerateSBox();
+byte[] GetKey();
