@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "Crypto.h"
 
-byte* encryptionKey;
+byte encryptionKey[KEY_BYTES] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15};
 byte** round_keys;
 byte** invsboxm;
 byte** sboxm;
@@ -17,7 +17,53 @@ void inverseSubBytes(byte cipherState[4][4])
 	}
 }
 
-void inverseMixColumns(byte cipherState[4][4])
+byte fieldMult(byte val, byte x){
+	byte result = 0;
+	switch(val){
+		case 1:
+			result = x;
+			break;
+		case 2:
+			result = (byte)x << 1;
+			if(x>127)
+				result = result^0x1b;
+			break;
+		case 3:
+			result = fieldMult(x, 2);
+			result = result^x;
+			break;
+		case 9:
+			result = fieldMult(x, 2);
+			result = fieldMult(result, 2);
+			result = fieldMult(result, 2);
+			result = result ^ x;
+			break;
+		case 11:
+			result = fieldMult(x, 2);
+			result = fieldMult(result, 2);
+			result = result^x;
+			result = fieldMult(result, 2);
+			result = result^x;
+			break;
+		case 13:
+			result = fieldMult(x, 2);
+			result = result^x;
+			result = fieldMult(result, 2);
+			result = fieldMult(result, 2);
+			result = result^x;
+			break;
+		case 14:
+			result = fieldMult(x, 2);
+			result = result^x;
+			result = fieldMult(result, 2);
+			result = result^x;
+			result = fieldMult(result, 2);
+			break;
+	}
+	return result;
+}
+
+void inverseMixColumns(byte state[4][4])
 {
   int i, j;
 
@@ -30,16 +76,15 @@ void inverseMixColumns(byte cipherState[4][4])
 
 	byte newstate[4][4];
 
-
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			newstate[i][j] = A[i][0]*cipherState[0][j] + A[i][1]*cipherState[1][j] + A[i][2]*cipherState[2][j] + A[i][3]*cipherState[3][j];
+			newstate[i][j] = fieldMult(A[i][0], state[0][j]) ^ fieldMult(A[i][1], state[1][j]) ^ fieldMult(A[i][2], state[2][j]) ^ fieldMult(A[i][3], state[3][j]);
 		}
 	}
 
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			cipherState[i][j] = newstate[i][j];
+			state[i][j] = newstate[i][j];
 		}
 	}
 
@@ -76,8 +121,10 @@ void inverseShiftRows(byte cipherState[4][4])
 
 void Round(byte cipherState[4][4], int round) {
 
+	// sboxm = GenerateSBox(round_keys[round]);
+ //    invsboxm = GetInvSBox(sboxm);
 	AddKey(cipherState, round_keys[round]);
-    inverseMixColumns(cipherState);
+    // inverseMixColumns(cipherState);
     inverseShiftRows(cipherState);
     inverseSubBytes(cipherState);
 }
@@ -139,14 +186,21 @@ byte *decrypt(byte cipher[16])
 //   	i++;
 //   }
 // }
-int main()
-{   sboxm = GenerateSBox();
-    invsboxm = GetInvSBox(sboxm);
-    encryptionKey = GetKey();
 
+int main()
+{   sboxm = GenerateSBox(encryptionKey);
+    invsboxm = GetInvSBox(sboxm);
 	round_keys = ExpandKey(sboxm, encryptionKey);
 
-    byte input[16] = {0x39, 0x33, 0xb, 0xa9, 0xad, 0x7f, 0x7a, 0x59, 0x6a, 0x49, 0x7b, 0x2f, 0x7b, 0x17, 0xb, 0xef};
+	// int i,j;
+	// for(i=0;i<11;i++){
+	// 	for(j=0;j<KEY_BYTES;j++){
+	// 		printf("%x ", round_keys[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
+
+    byte input[16] = {0x11, 0x95, 0xd1, 0xc9, 0x60, 0x36, 0x75, 0x1c, 0x7b, 0xb1, 0xc8, 0xc, 0x63, 0x38, 0xbd, 0xbc};
 
     decrypt(input);
 	return 0;
