@@ -183,6 +183,15 @@ void MixColumns(byte state[4][4]){
 
 }
 
+void Round(byte state[4][4], int round){
+
+	SubBytes(state);
+	ShiftRows(state);
+	MixColumns(state);
+	AddKey(state, round);
+
+}
+
 void Encrypt(byte input[16]){
 	byte state[4][4];
 	
@@ -195,6 +204,24 @@ void Encrypt(byte input[16]){
 		}
 	}
 
+	AddKey(state, 0);
+
+	for(i=1;i<=10;i++){
+		Round(state, i);
+	}
+
+	byte output[16];
+	k = 0;
+	for(i=0;i<4;i++){
+		for(j=0;j<4;j++){
+			output[k++] = state[j][i];
+		}
+	}
+
+	for(i=0;i<16;i++){
+		printf("%x ", output[i]);
+	}
+	printf("\n");
 }
 
 void main(){
@@ -217,10 +244,15 @@ void main(){
 	// }
 	// printf("\n");
 
-	for(i=0;i<11;i++){
-		for(j=0;j<KEY_BYTES;j++){
-			printf("%x ", round_keys[i][j]);
-		}
-		printf("\n");
-	}
+	// for(i=0;i<11;i++){
+	// 	for(j=0;j<KEY_BYTES;j++){
+	// 		printf("%x ", round_keys[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
+
+	byte input[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+	Encrypt(input);
+
 }
