@@ -95,7 +95,7 @@ void Encrypt(byte input[16]) {
 		}
 	}
 
-	AddKey(state, 0);
+	AddKey(state, round_keys[0]);
 
 	for (i = 1; i <= 10; i++) {
 		Round(state, i);
@@ -158,15 +158,15 @@ void main() {
 	// }
 	// printf("\n");
 
-	for(i=0;i<11;i++){
-		for(j=0;j<KEY_BYTES;j++){
-			printf("%x ", round_keys[i][j]);
-		}
-		printf("\n");
-	}
+	// for(i=0;i<11;i++){
+	// 	for(j=0;j<KEY_BYTES;j++){
+	// 		printf("%x ", round_keys[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
 
-	// byte input[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	byte input[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-	// Encrypt(input);
+	Encrypt(input);
 
 }
