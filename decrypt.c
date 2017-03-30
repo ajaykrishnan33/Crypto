@@ -130,7 +130,7 @@ void decrypt(byte cipher[16])
 	for (i = 0; i < 4; i++)
     {
 		for (j = 0; j < 4; j++) {
-			planetext[l++] = state[j][i];
+			planetext[l++] = cipherState[j][i];
 		}
 	}
 	for (i = 0; i < 16; i++) 
