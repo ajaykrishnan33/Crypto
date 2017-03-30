@@ -46,15 +46,15 @@ void Algorithm1(byte* sbox, byte key[KEY_BYTES]) {
 
 }
 
-byte* expand_bytes(byte key[KEY_BYTES/2]){
+byte* expand_bytes(byte key[KEY_BYTES / 2]) {
 
-	byte* result = malloc(sizeof(byte)*KEY_BYTES);
+	byte* result = malloc(sizeof(byte) * KEY_BYTES);
 
 	int i;
-	for(i=0;i<KEY_BYTES/2;i++){
+	for (i = 0; i < KEY_BYTES / 2; i++) {
 
-		result[2*i] = (byte)key[i] >> 4;
-		result[2*i + 1] = (byte)(key[i] << 4) >> 4;
+		result[2 * i] = (byte)key[i] >> 4;
+		result[2 * i + 1] = (byte)(key[i] << 4) >> 4;
 
 	}
 
@@ -73,26 +73,26 @@ void Algorithm2(byte** sbox, byte key[KEY_BYTES]) {
 
 	for (i = 0; i < KEY_BYTES; i++) {
 		k = 0;
-		for(j=left[i];j<KEY_BYTES;j++){
+		for (j = left[i]; j < KEY_BYTES; j++) {
 			temp[k++] = sbox[i][j];
 		}
-		for(j=0;j<left[i];j++){
+		for (j = 0; j < left[i]; j++) {
 			temp[k++] = sbox[i][j];
 		}
-		for(j=0;j<KEY_BYTES;j++){
+		for (j = 0; j < KEY_BYTES; j++) {
 			sbox[i][j] = temp[j];
 		}
 	}
 
 	for (i = 0; i < KEY_BYTES; i++) {
 		k = 0;
-		for(j=right[i];j<KEY_BYTES;j++){
+		for (j = right[i]; j < KEY_BYTES; j++) {
 			temp[k++] = sbox[j][i];
 		}
-		for(j=0;j<right[i];j++){
+		for (j = 0; j < right[i]; j++) {
 			temp[k++] = sbox[j][i];
 		}
-		for(j=0;j<KEY_BYTES;j++){
+		for (j = 0; j < KEY_BYTES; j++) {
 			sbox[j][i] = temp[j];
 		}
 	}
@@ -102,21 +102,21 @@ void Algorithm2(byte** sbox, byte key[KEY_BYTES]) {
 
 }
 
-byte** Algorithm3(byte sbox[16][16], byte key[KEY_BYTES]){
+byte** Algorithm3(byte sbox[16][16], byte key[KEY_BYTES]) {
 	byte sbox1[256];
-	int i,j,k=0;
-	for(i=0;i<16;i++){
-		for(j=0;j<16;j++){
+	int i, j, k = 0;
+	for (i = 0; i < 16; i++) {
+		for (j = 0; j < 16; j++) {
 			sbox1[k++] = sbox[i][j];
 		}
 	}
 	Algorithm1(sbox1, key);
 
-	byte** sbox2 = malloc(sizeof(byte*)*16);
+	byte** sbox2 = malloc(sizeof(byte*) * 16);
 	k = 0;
-	for(i=0;i<16;i++){
-		sbox2[i] = malloc(sizeof(byte)*16);
-		for(j=0;j<16;j++){
+	for (i = 0; i < 16; i++) {
+		sbox2[i] = malloc(sizeof(byte) * 16);
+		for (j = 0; j < 16; j++) {
 			sbox2[i][j] = sbox1[k++];
 		}
 	}
@@ -131,27 +131,27 @@ byte** GenerateSBox() {
 	return sboxm;
 }
 
-byte** GetInvSBox(byte** sboxm){
-	byte** invsboxm = malloc(sizeof(byte*)*16);
+byte** GetInvSBox(byte** sboxm) {
+	byte** invsboxm = malloc(sizeof(byte*) * 16);
 	byte flat_sbox[256];
 	byte flat_invsbox[256];
 
 	int i, j, k = 0;
 
-	for(i=0;i<16;i++){
-		for(j=0;j<16;j++){
+	for (i = 0; i < 16; i++) {
+		for (j = 0; j < 16; j++) {
 			flat_sbox[k++] = sboxm[i][j];
 		}
 	}
 
-	for(i=0;i<256;i++){
+	for (i = 0; i < 256; i++) {
 		flat_invsbox[flat_sbox[i]] = i;
 	}
 
 	k = 0;
-	for(i=0;i<16;i++){
-		invsboxm[i] = malloc(sizeof(byte)*16);
-		for(j=0;j<16;j++){
+	for (i = 0; i < 16; i++) {
+		invsboxm[i] = malloc(sizeof(byte) * 16);
+		for (j = 0; j < 16; j++) {
 			invsboxm[i][j] = flat_invsbox[k++];
 		}
 	}
@@ -159,6 +159,6 @@ byte** GetInvSBox(byte** sboxm){
 	return invsboxm;
 }
 
-byte* GetKey(){
+byte* GetKey() {
 	return key;
 }
