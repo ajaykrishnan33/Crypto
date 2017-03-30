@@ -2,45 +2,20 @@
 #include <stdlib.h>
 #include "Crypto.h"
 
-byte* decryptionKey;
-byte round_keys[10][KEY_BYTES];
+byte* encryptionKey;
+byte** round_keys;
 byte** invsboxm;
+byte** sboxm;
 void inverseSubBytes(byte cipherState[4][4])
 {
    int i, j;
 
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
-			cipherState[i][j] = invsboxm[(byte)cipherState[i][j] >> 4][(byte)(key[i] << 4) >> 4];
+			cipherState[i][j] = invsboxm[(byte)cipherState[i][j] >> 4][(byte)(cipherState[i][j] << 4) >> 4];
 		}
 	}
 }
-
-
-void AddKey(byte state[4][4], int round){
-
-	byte flat[16];
-
-	int i,j,k=0;
-	for(i=0;i<4;i++){
-		for(j=0;j<4;j++){
-			flat[k++] = state[j][i];
-		}
-	}
-
-	for(i=0;i<16;i++){
-		flat[i] = flat[i]^round_keys[round][i];
-	}
-	
-	k = 0;
-	for(i=0;i<4;i++){
-		for(j=0;j<4;j++){
-			state[j][i] = flat[k++];
-		}
-	}
-
-}
-
 
 void inverseMixColumns(byte cipherState[4][4])
 {
@@ -101,36 +76,36 @@ void inverseShiftRows(byte cipherState[4][4])
 
 void Round(byte cipherState[4][4], int round) {
 
-	AddKey(state, round);
+	AddKey(cipherState, round_keys[round]);
     inverseMixColumns(cipherState);
     inverseShiftRows(cipherState);
     inverseSubBytes(cipherState);
 }
 
-void decrypt(byte cipher[16])
+byte *decrypt(byte cipher[16])
 {
    byte cipherState[4][4];
-   int i,j,k=0;
+   int i,j,l=0;
 	for(i=0;i<4;i++)
 	{
 		for(j=0;j<4;j++){
-			cipherState[j][i] = cipher[k++];
+			cipherState[j][i] = cipher[l++];
 		}
 	}
 
-	for (i = 1; i <= 10; i++) 
+	for (i = 10; i > 0; i--) 
 	{
-		Round(state, i);
+		Round(cipherState, i);
 	}
 
-	AddKey(state,0);
-    byte planetext[16];
+	AddKey(cipherState, round_keys[0]);
+    static byte planetext[16];
 
 	l = 0;
 	for (i = 0; i < 4; i++)
     {
 		for (j = 0; j < 4; j++) {
-			planetext[l++] = state[j][i];
+			planetext[l++] = cipherState[j][i];
 		}
 	}
 	for (i = 0; i < 16; i++) 
@@ -138,12 +113,41 @@ void decrypt(byte cipher[16])
 		printf("%x ", planetext[i]);
 	}
 	printf("\n");
- 
+    return planetext;
 }
 
+// byte *one_round_cbc(byte cipher[16],byte roundIV[16])
+// {   static byte* out;
+// 	out=decrypt(cipher);
+//     int i=0;
+//     for(i=0;i<16;i++)
+//     {
+//     	out[i]=out[i]^roundIV[i];
+//     	i++;
+//     }
+//     return out;
+// }
+
+// void cbc_decrypt(byte ciphertext[100][16],byte IV[16])
+// {
+//   byte* p;
+//   int i=1;
+//   p=one_round_cbc(ciphertext[0],IV);
+//   while(i<100)
+//   {
+//   	p=one_round_cbc(ciphertext[i],p);
+//   	i++;
+//   }
+// }
 int main()
 {   sboxm = GenerateSBox();
     invsboxm = GetInvSBox(sboxm);
-    
+    encryptionKey = GetKey();
+
+	round_keys = ExpandKey(sboxm, encryptionKey);
+
+    byte input[16] = {0x39, 0x33, 0xb, 0xa9, 0xad, 0x7f, 0x7a, 0x59, 0x6a, 0x49, 0x7b, 0x2f, 0x7b, 0x17, 0xb, 0xef};
+
+    decrypt(input);
 	return 0;
-}
+}rm
