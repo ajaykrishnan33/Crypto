@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Crypto.h"
 
 byte encryptionKey[KEY_BYTES] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15};
@@ -121,8 +122,8 @@ void inverseShiftRows(byte cipherState[4][4])
 
 void Round(byte cipherState[4][4], int round) {
 
-	// sboxm = GenerateSBox(round_keys[round]);
- //    invsboxm = GetInvSBox(sboxm);
+	sboxm = GenerateSBox(round_keys[round]);
+    invsboxm = GetInvSBox(sboxm);
 	AddKey(cipherState, round_keys[round]);
     // inverseMixColumns(cipherState);
     inverseShiftRows(cipherState);
@@ -155,53 +156,72 @@ byte *decrypt(byte cipher[16])
 			planetext[l++] = cipherState[j][i];
 		}
 	}
-	for (i = 0; i < 16; i++) 
-	{
-		printf("%x ", planetext[i]);
-	}
-	printf("\n");
     return planetext;
 }
 
-// byte *one_round_cbc(byte cipher[16],byte roundIV[16])
-// {   static byte* out;
-// 	out=decrypt(cipher);
-//     int i=0;
-//     for(i=0;i<16;i++)
-//     {
-//     	out[i]=out[i]^roundIV[i];
-//     	i++;
-//     }
-//     return out;
-// }
+byte *cbc_decrypt(byte* cipher, int iterations, int* length)
+{   
+	byte* output = calloc(iterations*16, sizeof(byte));
+	byte IV[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-// void cbc_decrypt(byte ciphertext[100][16],byte IV[16])
-// {
-//   byte* p;
-//   int i=1;
-//   p=one_round_cbc(ciphertext[0],IV);
-//   while(i<100)
-//   {
-//   	p=one_round_cbc(ciphertext[i],p);
-//   	i++;
-//   }
-// }
+	byte* temp = IV;
+	byte inter[16];
+	int k=0;
+	int i,j;
+	for(i=0;i<iterations;i++)
+	{
+       for(j=0;j<16;j++){
+			inter[j] = cipher[16*i+j];
+		}
+		byte* out=decrypt(inter);
+		for(j=0;j<16;j++)
+		{
+           out[j]=out[j]^temp[j];
+           temp[j]=inter[j];
+		}
+		for(j=0;j<16;j++){
+			output[k++] = out[j];
+		}
+	}
+
+	int d = (int)output[k-1];
+	*length = iterations*16 - 16 - d;
+
+  return output;
+}
 
 int main()
 {   sboxm = GenerateSBox(encryptionKey);
     invsboxm = GetInvSBox(sboxm);
 	round_keys = ExpandKey(sboxm, encryptionKey);
 
-	// int i,j;
-	// for(i=0;i<11;i++){
-	// 	for(j=0;j<KEY_BYTES;j++){
-	// 		printf("%x ", round_keys[i][j]);
-	// 	}
-	// 	printf("\n");
-	// }
+	int i;
 
-    byte input[16] = {0x11, 0x95, 0xd1, 0xc9, 0x60, 0x36, 0x75, 0x1c, 0x7b, 0xb1, 0xc8, 0xc, 0x63, 0x38, 0xbd, 0xbc};
+    char inp_str[35000];
+    fgets(inp_str, 35000, stdin);
 
-    decrypt(input);
+    int x = strlen(inp_str)/3;
+
+    byte* input = malloc(sizeof(byte)*x);
+
+    const char delim[2] = " ";
+    char* tok = strtok(inp_str, delim);
+
+    unsigned int val;
+
+    i = 0;
+    while(tok!=NULL){
+    	sscanf(tok, "%x", &val);
+    	input[i++] = (byte)val;
+    	tok = strtok(NULL, " ");
+    }
+
+    int len=0;
+    byte* p = cbc_decrypt(input, x/16, &len);
+
+    for (i = 0; i < len; i++)
+	{
+		printf("%c", p[i]);
+	}
 	return 0;
 }

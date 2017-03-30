@@ -2,9 +2,8 @@
 
 typedef unsigned char byte;
 
-byte** GenerateSBox();
+byte** GenerateSBox(byte[]);
 byte** GetInvSBox(byte**);
-byte* GetKey();
 void SubWord(byte**, byte[]);
 byte** ExpandKey(byte**, byte*);
 void AddKey(byte[4][4], byte*);

@@ -83,6 +83,10 @@ byte** ExpandKey(byte** sboxm, byte* encryptionKey) {
 		}
 	}
 
+	for(i=0;i<KEY_BYTES;i++){
+		round_keys[10][i] = round_keys[0][i];
+	}
+
 	return round_keys;
 
 }
