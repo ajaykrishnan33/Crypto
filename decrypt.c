@@ -110,11 +110,11 @@ void Round(byte cipherState[4][4], int round) {
 void decrypt(byte cipher[16])
 {
    byte cipherState[4][4];
-   int i,j,k=0;
+   int i,j,l=0;
 	for(i=0;i<4;i++)
 	{
 		for(j=0;j<4;j++){
-			cipherState[j][i] = cipher[k++];
+			cipherState[j][i] = cipher[l++];
 		}
 	}
 
